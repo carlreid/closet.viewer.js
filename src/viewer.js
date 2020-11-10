@@ -11,7 +11,6 @@ import AnnotationManager from "@/lib/annotation/AnnotationManager";
 import TechPackManager from "@/lib/techPack/TechPackManager";
 
 import screenfull from "screenfull";
-import MobileDetect from "mobile-detect";
 
 import { MATMESH_TYPE } from "@/lib/clo/readers/predefined";
 import { capturePrincipleViews, recursiveObjectwiseViewFrustumCulling } from "./lib/clo/utils/PrincipleViews";
@@ -67,13 +66,11 @@ export default class ClosetViewer {
     this.object3D = null;
     this.loadTechPack = this.loadTechPack.bind(this);
 
-    this.mobileDetect = null;
     this.alertVersion = this.alertVersion.bind(this);
     this.MATMESH_TYPE = MATMESH_TYPE;
   }
 
   init({ width, height, element, cameraPosition = null, stats }) {
-    this.mobileDetect = new MobileDetect(window.navigator.userAgent);
 
     const w = (this.defaultWidth = width);
     const h = (this.defaultHeight = height);
@@ -142,7 +139,7 @@ export default class ClosetViewer {
 
     const DirLight1 = new THREE.DirectionalLight(0x6e6e6e);
     DirLight1.position.set(1500, 3000, 1500);
-    DirLight1.castShadow = this.mobileDetect.os() === "iOS" ? false : true;
+    DirLight1.castShadow = true;
 
     // set up shadow properties for the light
     DirLight1.shadow.mapSize.width = 2048; // default
@@ -624,7 +621,6 @@ export default class ClosetViewer {
 
   // TEMP
   alertVersion() {
-    alert(this.mobileDetect.os());
   }
 
   safeDeallocation(object, type, type_cb, nontype_cb) {
