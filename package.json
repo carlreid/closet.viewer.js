@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@jest/reporters": "^26.6.0",
+    "@types/got": "^9.6.11",
     "@types/jest": "^26.0.14",
     "@types/lodash": "^4.14.162",
     "@types/nodegit": "^0.26.11",
@@ -50,6 +51,7 @@
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-prettier": "^3.1.2",
     "fp-ts": "^2.8.4",
+    "got": "^11.8.0",
     "imghash": "0.0.7",
     "io-ts": "^2.2.11",
     "jest": "^26.4.2",

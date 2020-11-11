@@ -1,18 +1,19 @@
-import puppeteer from "puppeteer";
 import * as fs from "fs";
-import { isRight } from "fp-ts/Either";
 import * as D from "io-ts/Decoder";
-import MetricReporter, { Benchmarking, Measurement } from "../MetricReporter";
+import MetricReporter, { Measurement } from "../MetricReporter";
 import * as webpackConfig from "../../webpack.config";
 import P from "path";
 import { streamPageEvents } from "../common";
-import URL from "url";
-import { last, map, tap } from "rxjs/operators";
+import * as U from "url";
+import { concatMap, map, mergeMap, toArray, tap } from "rxjs/operators";
 import ReactDomServer from "react-dom/server";
 import { template } from "./template";
 import * as E from "fp-ts/Either";
-import { identity } from "fp-ts/lib/function";
-
+import { zrestURLs } from "./zrestURLs";
+import { from } from "rxjs";
+import { v4 as uuidv4 } from "uuid";
+import { resolve } from "../../webpack.config";
+import got from "got";
 
 declare var metricReporter: MetricReporter;
 
@@ -34,18 +35,26 @@ test("Bundle size test", () => {
   });
 });
 
-const benchmarkName = "denim loading benchmarking"
-test(benchmarkName, (done) => {
-  const libPath = P.resolve(__dirname, "..", "..", "dist", "closet.viewer.js");
-  const zrestPath = P.resolve(__dirname, "denim.zrest");
-  const html = ReactDomServer.renderToStaticMarkup(
-    template(
-      URL.pathToFileURL(libPath),
-      URL.pathToFileURL(zrestPath)
-    )
-  );
+const zrestsDir = P.resolve(__dirname, "zrests")
 
-  streamPageEvents(html, (page) => page.metrics()).pipe(
+beforeAll(()=>{
+  console.log(zrestsDir);
+  fs.mkdirSync(zrestsDir);
+  fs.chmodSync(zrestsDir, 0o777);
+})
+
+const benchmarkName = "zrest loading benchmarking"
+test(benchmarkName, (done) => {
+
+  const libPath = P.resolve(__dirname, "..", "..", "dist", "closet.viewer.js");
+
+  from(zrestURLs).pipe(
+    concatMap(download(zrestsDir)),
+    map(U.pathToFileURL),
+    toArray(),
+    map(zrestLocalURLs => template(U.pathToFileURL(libPath), zrestLocalURLs)),
+    map(ReactDomServer.renderToStaticMarkup),
+    mergeMap(html =>  streamPageEvents(html, (page) => page.metrics())),
     map(ChromeMetric.decode),
     map(E.fold(
       (notChromeMetric) => { throw notChromeMetric },
@@ -61,4 +70,18 @@ test(benchmarkName, (done) => {
     next: (metric) => metricReporter.report(metric),
     complete: done
   })
-}, 120000);
+}, 5 * 60 * 1000);
+
+
+const download = (downloadDir:string) => (url:U.URL):Promise<string> => {
+  const dst = P.resolve(downloadDir, uuidv4() + ".zrest")
+  const downloadStream = got.stream(url.toString())
+  const writeStream = fs.createWriteStream(dst)
+
+  return new Promise((resolve, reject) => {
+    writeStream.on("finish", ()=>resolve(dst))
+    writeStream.on("error", reject)
+    downloadStream.on("error", reject)
+    downloadStream.pipe(writeStream)
+  })
+}

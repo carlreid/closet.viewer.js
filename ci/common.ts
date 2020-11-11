@@ -35,6 +35,16 @@ export function streamPageEvents<T>(html: string, pageMap: (p: puppeteer.Page, r
           req.continue();
         }
       });
+      page.on("console", (message) => {
+        console.log({
+          puppeteerMessage: message.text()
+        })
+      })
+      page.on("error", (error) => {
+        console.error({
+          puppeteerError: error
+        })
+      })
       const url = U.pathToFileURL(tmpHTMLpath).toString();
       await page.goto(url);
     });

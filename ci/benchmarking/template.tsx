@@ -1,8 +1,8 @@
 import React from "react";
-import URL from "url";
+import U from "url";
 import P from "path";
 
-export const template = (libURL: URL.URL, modelURL: URL.URL) => (
+export const template = (libURL: U.URL, modelURLs: U.URL[]) => (
   <div>
     <div
       id="target"
@@ -21,11 +21,21 @@ export const template = (libURL: URL.URL, modelURL: URL.URL) => (
         height: 512,
         stats: true
     });
-    closet.viewer.loadZrestUrl('${modelURL.toString()}', function(x){}, function(x){
-        (async function() {
-            await fetch("http://screenshotrequest.clo", {method: 'PUT',})
-        })()
+      
+      
+      function recursion(urls) {
+          if (urls.length == 0) {
+              fetch("http://screenshotrequest.clo", {method: 'PUT',})
+          } else {
+              closet.viewer.loadZrestUrl(urls[0], function(x){}, function(x){
+                  recursion(urls.slice(1))
     })
+          }
+      }
+      
+      recursion([
+      ${modelURLs.map(x=>`"` + x.toString() + `"`).join(", ")}
+      ])
     `,
       }}
     ></script>
