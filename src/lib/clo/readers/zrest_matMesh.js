@@ -146,11 +146,6 @@ MatMeshManager.prototype = {
       bVisible
       // drawMode
     ) => {
-      // NOTE: If the matShape is invisible, do not make matMeshes.
-      if (bVisible === 0 || bVisible === false) {
-        return;
-      }
-
       const zrestVersion = this.zProperty.version;
       let indexOffset = zrestVersion > 4 ? 0 : totalIdxCount;
 
