@@ -1,16 +1,19 @@
 /* eslint-disable require-jsdoc */
 import * as THREE from "three";
-import { TweenMax } from "gsap/TweenMax";
 import { Marker, makeTextSprite } from "@/lib/marker/Marker";
 import FlashAnnotation from "./FlashAnnotation";
+import { Vector3 } from "three";
+import { QuadraticTweening } from "../clo/utils/Tween";
 
 const pointerScaleVector = new THREE.Vector3();
 const pointerScaleFactor = 65;
 
 // variables for animation between annotation markers
-let tween;
+
 const startQuaternion = new THREE.Quaternion();
 const endQuaternion = new THREE.Quaternion();
+const startPosition = new Vector3();
+const endPosition = new Vector3();
 
 class AnnotationManager {
   constructor({ scene, camera, renderer, controls, updateRenderer, setter }) {
@@ -331,22 +334,25 @@ class AnnotationManager {
   animateCamera(annotationItem) {
     this.controls.enabled = false;
 
-    const dest = {
-      x: annotationItem.cameraPos.x,
-      y: annotationItem.cameraPos.y,
-      z: annotationItem.cameraPos.z,
-    };
+    const dest = new Vector3(
+      annotationItem.cameraPos.x,
+      annotationItem.cameraPos.y,
+      annotationItem.cameraPos.z,
+    );
 
-    const onUpdate = () => {
+    const onUpdate = (weight) => {
+
       // camera quaternion update
       // eslint-disable-next-line prefer-const
       let q = new THREE.Quaternion();
       // eslint-disable-next-line prefer-const
-      let t = tween.progress();
+      let t = weight
       THREE.Quaternion.slerp(startQuaternion, endQuaternion, q, t);
       q.normalize();
 
       this.camera.quaternion.copy(q);
+
+      this.camera.position.copy(new Vector3().lerpVectors(startPosition, endPosition, t))
       this.updateRenderer();
     };
 
@@ -367,18 +373,14 @@ class AnnotationManager {
 
       endQuaternion.copy(annotationItem.cameraQuaternion);
       endQuaternion.normalize();
+      
+      startPosition.copy(this.camera.position);
+      endPosition.copy(dest);
 
       const target = new THREE.Vector3();
       target.copy(annotationItem.cameraTarget);
 
-      tween = TweenMax.to(this.camera.position, 0.8, {
-        x: dest.x,
-        y: dest.y,
-        z: dest.z,
-        ease: Power1.easeInOut,
-        onUpdate: onUpdate,
-        onComplete: onComplete,
-      });
+      QuadraticTweening(800, Date.now(), onUpdate, onComplete);
     } else {
       onComplete();
     }
