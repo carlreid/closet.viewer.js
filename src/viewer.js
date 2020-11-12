@@ -1,4 +1,4 @@
-﻿/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc */
 import ZRestLoader, {
   dataWorkerFunction,
   checkFileReaderSyncSupport,
@@ -192,10 +192,15 @@ export default class ClosetViewer {
     // canvas event
     const canvas = this.setter;
     canvas.addEventListener("mouseout", this.onPanControls, false);
+    canvas.addEventListener("pointerout", this.onPanControls, false);
     canvas.addEventListener("mouseover", this.offPanControls, false);
+    canvas.addEventListener("pointerover", this.offPanControls, false);
     canvas.addEventListener("mousedown", this.onMouseDown, false);
+    canvas.addEventListener("pointerdown", this.onMouseDown, false);
     canvas.addEventListener("mousemove", this.onMouseMove, false);
+    canvas.addEventListener("pointermove", this.onMouseMove, false);
     canvas.addEventListener("mouseup", this.onMouseUp, false);
+    canvas.addEventListener("pointerup", this.onMouseUp, false);
     canvas.addEventListener("click", this.onMouseClick, false);
 
     function appendDefaultCamera() {
@@ -472,6 +477,9 @@ export default class ClosetViewer {
         await this.changeColorway(colorwayIndex);
       }
       this.scene.add(object);
+      // Ingun: Bring zrest object to front so it renders before annotations.
+      // Ingun: Annotation 보다 zrest 가 먼저 렌더링 되게 하기 위해.
+      this.scene.children.sort((x,y)=> x === object ? -1 : 1)
       this.object3D = object;
       this.zrest.zoomToObjects(loadedCamera, this.scene);
 

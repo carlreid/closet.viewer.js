@@ -392,7 +392,7 @@ class AnnotationManager {
   }
 
   getMousePosition({ clientX, clientY }) {
-    const canvasBounds = this.renderer.context.canvas.getBoundingClientRect();
+    const canvasBounds = this.renderer.getContext().canvas.getBoundingClientRect();
     const x =
       ((clientX - canvasBounds.left) /
         (canvasBounds.right - canvasBounds.left)) *
