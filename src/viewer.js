@@ -5,7 +5,6 @@ import ZRestLoader, {
 } from "@/lib/clo/readers/ZrestLoader";
 import * as THREE from "three";
 import {OrbitControls} from "./lib/custom-orbitcontrol/OrbitControls";
-import "@/lib/draco/DRACOLoader";
 
 import AnnotationManager from "@/lib/annotation/AnnotationManager";
 import TechPackManager from "@/lib/techPack/TechPackManager";

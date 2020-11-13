@@ -20,10 +20,10 @@ export function streamPageEvents<T>(html: string, pageMap: (p: puppeteer.Page, r
       await page.setRequestInterception(true);
       page.on("request", async (req) => {
         if (req.url().includes("screenshotrequest")) {
-          if (req.method() == "DELETE") {
+          if (req.method() === "DELETE") {
             subscriber.complete();
             page.close();
-          } else if (req.method() == "PUT") {
+          } else if (req.method() === "PUT") {
             subscriber.next(await pageMap(page, req));
             subscriber.complete();
             page.close();
@@ -43,6 +43,11 @@ export function streamPageEvents<T>(html: string, pageMap: (p: puppeteer.Page, r
       page.on("error", (error) => {
         console.error({
           puppeteerError: error
+        })
+      })
+      page.on("pageerror", (error)=>{
+        console.error({
+          puppeteerPageError: error
         })
       })
       const url = U.pathToFileURL(tmpHTMLpath).toString();

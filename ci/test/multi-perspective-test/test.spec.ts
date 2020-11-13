@@ -20,10 +20,9 @@ describe("rendering test", ()=>{
   const libPath = P.resolve(__dirname, "..", "..", "..", "dist", "closet.viewer.js")
   const libURL = U.pathToFileURL(libPath);
   it("rendering test", (done)=>{
-    const results = from(zrestURLs).pipe(
-      map(zrestURL => renderToStaticMarkup(template(libURL, zrestURL))),
-      concatMap(streamScreenshots),
-    )
+
+    const html = renderToStaticMarkup(template(libURL, zrestURLs));
+    const results = streamScreenshots(html);
 
     const answers = from(answerPNGs).pipe(map((path) => fs.readFileSync(path)));
     

@@ -6,6 +6,11 @@ import { readByteArray } from "@/lib/clo/file/KeyValueMapReader";
 
 import { MATMESH_TYPE } from "@/lib/clo/readers/predefined";
 import { makeMaterial } from "@/lib/clo/readers/zrest_material";
+import { DRACOLoader } from "../../custom-dracoloader/DRACOLoader";
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+dracoLoader.preload();
 
 export default function MatMeshManager({
   matMeshMap: matMeshMap,
@@ -194,6 +199,7 @@ MatMeshManager.prototype = {
          */
         const bufferGeometry = new THREE.BufferGeometry();
 
+        
         /**
          * NOTE:
          * dracoGeometry의 해당 mesh에 의해 사용된 vertex들로만 새로운 메쉬를 만들기 위해 changeVertexIndex 만든다.
@@ -410,14 +416,23 @@ MatMeshManager.prototype = {
         return false;
       }
 
-      const drcArrayBuffer = await zip
-        .file(dracoMeshFilename)
-        .async("arrayBuffer");
+      const arrayBuffer = await zip.file(dracoMeshFilename).async("arraybuffer");
+      const dracoGeometry = await dracoLoader.decodeArraybufferAsync(arrayBuffer);
 
-      const dracoLoader = new THREE.DRACOLoader();
-      // dracoLoader.setVerbosity(bLog);
+      dracoGeometry.indices = dracoGeometry.index.array;
+      dracoGeometry.vertices = dracoGeometry.attributes.position.array;
+      dracoGeometry.uvs = dracoGeometry.attributes.uv.array;
+      dracoGeometry.numUVs = 1;
+      if (dracoGeometry.attributes.normal !== undefined) {
+        dracoGeometry.useNormal = true;
+        dracoGeometry.normals = dracoGeometry.attributes.normal.array;
+      }
+      if (dracoGeometry.attributes.uv2 !== undefined) {
+        dracoGeometry.numUVs = 2;
+        dracoGeometry.uv2s = dracoGeometry.attributes.uv2.array;
+      }
 
-      return dracoLoader.decodeDracoFile(drcArrayBuffer);
+      return dracoGeometry
     };
 
     const buildStyleLines = (dracoGeometry, patternIdx, listLine) => {
@@ -429,6 +444,8 @@ MatMeshManager.prototype = {
         color: 0xfffe00,
       });
       const currentStyleLineSet = new Set();
+
+      
 
       for (let k = 0; k < listLine.length; ++k) {
         const frontStyleLineGeometry = new THREE.Geometry();
